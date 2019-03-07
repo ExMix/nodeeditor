@@ -43,14 +43,16 @@ public:
   std::shared_ptr<Connection>
   createConnection(PortType connectedPort,
                    Node& node,
-                   PortIndex portIndex);
+                   PortIndex portIndex,
+                   const QUuid& uuid = QUuid::createUuid());
 
   std::shared_ptr<Connection>
   createConnection(Node& nodeIn,
                    PortIndex portIndexIn,
                    Node& nodeOut,
                    PortIndex portIndexOut,
-                   TypeConverter const & converter = TypeConverter{});
+                   TypeConverter const & converter = TypeConverter{},
+                   const QUuid& uuid = QUuid::createUuid());
 
   std::shared_ptr<Connection>restoreConnection(QJsonObject const &connectionJson);
 

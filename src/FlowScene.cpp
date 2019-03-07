@@ -72,9 +72,10 @@ std::shared_ptr<Connection>
 FlowScene::
 createConnection(PortType connectedPort,
                  Node& node,
-                 PortIndex portIndex)
+                 PortIndex portIndex,
+                 const QUuid& uuid)
 {
-  auto connection = std::make_shared<Connection>(connectedPort, node, portIndex);
+  auto connection = std::make_shared<Connection>(connectedPort, node, portIndex, uuid);
 
   auto cgo = detail::make_unique<ConnectionGraphicsObject>(*this, *connection);
 
@@ -103,14 +104,15 @@ createConnection(Node& nodeIn,
                  PortIndex portIndexIn,
                  Node& nodeOut,
                  PortIndex portIndexOut,
-                 TypeConverter const &converter)
+                 TypeConverter const &converter,
+                 const QUuid& uuid)
 {
   auto connection =
     std::make_shared<Connection>(nodeIn,
                                  portIndexIn,
                                  nodeOut,
                                  portIndexOut,
-                                 converter);
+                                 converter, uuid);
 
   auto cgo = detail::make_unique<ConnectionGraphicsObject>(*this, *connection);
 
@@ -135,6 +137,7 @@ std::shared_ptr<Connection>
 FlowScene::
 restoreConnection(QJsonObject const &connectionJson)
 {
+  QUuid self_uuid = QUuid(connectionJson["self_id"].toString());
   QUuid nodeInId  = QUuid(connectionJson["in_id"].toString());
   QUuid nodeOutId = QUuid(connectionJson["out_id"].toString());
 
@@ -171,7 +174,7 @@ restoreConnection(QJsonObject const &connectionJson)
   std::shared_ptr<Connection> connection =
     createConnection(*nodeIn, portIndexIn,
                      *nodeOut, portIndexOut,
-                     getConverter());
+                     getConverter(), self_uuid);
 
   // Note: the connectionCreated(...) signal has already been sent
   // by createConnection(...)

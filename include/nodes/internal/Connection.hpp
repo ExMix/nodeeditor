@@ -39,14 +39,15 @@ public:
   /// The opposite connection end will require anothre port.
   Connection(PortType portType,
              Node& node,
-             PortIndex portIndex);
+             PortIndex portIndex,
+             const QUuid& uuid = QUuid::createUuid());
 
   Connection(Node& nodeIn,
              PortIndex portIndexIn,
              Node& nodeOut,
              PortIndex portIndexOut,
-             TypeConverter converter =
-               TypeConverter{});
+             TypeConverter converter = TypeConverter{},
+             const QUuid& uuid = QUuid::createUuid());
 
   Connection(const Connection&) = delete;
   Connection operator=(const Connection&) = delete;

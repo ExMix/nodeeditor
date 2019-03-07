@@ -32,8 +32,9 @@ using QtNodes::TypeConverter;
 Connection::
 Connection(PortType portType,
            Node& node,
-           PortIndex portIndex)
-  : _uid(QUuid::createUuid())
+           PortIndex portIndex,
+           const QUuid& uuid)
+  : _uid(uuid)
   , _outPortIndex(INVALID)
   , _inPortIndex(INVALID)
   , _connectionState()
@@ -49,8 +50,9 @@ Connection(Node& nodeIn,
            PortIndex portIndexIn,
            Node& nodeOut,
            PortIndex portIndexOut,
-           TypeConverter typeConverter)
-  : _uid(QUuid::createUuid())
+           TypeConverter typeConverter,
+           const QUuid& uuid)
+  : _uid(uuid)
   , _outNode(&nodeOut)
   , _inNode(&nodeIn)
   , _outPortIndex(portIndexOut)
@@ -86,6 +88,7 @@ Connection::
 save() const
 {
   QJsonObject connectionJson;
+  connectionJson["self_id"] = id().toString();
 
   if (_inNode && _outNode)
   {
