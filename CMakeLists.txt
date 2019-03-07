@@ -151,39 +151,3 @@ endif()
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
-
-if (NOT ${CMAKE_DISABLE_INSTALL_TARGETS})
-###############
-# Installation
-##
-
-include(GNUInstallDirs)
-
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/NodeEditor)
-
-install(TARGETS nodes
-  EXPORT NodeEditorTargets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-install(EXPORT NodeEditorTargets
-  FILE NodeEditorTargets.cmake
-  NAMESPACE NodeEditor::
-  DESTINATION ${INSTALL_CONFIGDIR}
-)
-
-include(CMakePackageConfigHelpers)
-
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/NodeEditorConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/NodeEditorConfig.cmake
-  INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
-)
-
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/NodeEditorConfig.cmake
-  DESTINATION ${INSTALL_CONFIGDIR}
-)
-endif()
