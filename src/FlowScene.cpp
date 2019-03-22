@@ -27,6 +27,8 @@
 #include "FlowView.hpp"
 #include "DataModelRegistry.hpp"
 
+#include <QMetaType>
+
 using QtNodes::FlowScene;
 using QtNodes::Node;
 using QtNodes::NodeGraphicsObject;
@@ -36,6 +38,9 @@ using QtNodes::NodeDataModel;
 using QtNodes::PortType;
 using QtNodes::PortIndex;
 using QtNodes::TypeConverter;
+
+Q_DECLARE_METATYPE(PortType);
+Q_DECLARE_METATYPE(PortIndex);
 
 
 FlowScene::
@@ -92,6 +97,8 @@ createConnection(PortType connectedPort,
           this,
           [this](Connection const& c) {
             connectionCreated(c);
+            c.getNode(PortType::In)->nodeDataModel()->updatePorts();
+            c.getNode(PortType::Out)->nodeDataModel()->updatePorts();
           });
 
   return connection;
@@ -128,6 +135,8 @@ createConnection(Node& nodeIn,
   _connections[connection->id()] = connection;
 
   connectionCreated(*connection);
+  connection->getNode(PortType::In)->nodeDataModel()->updatePorts();
+  connection->getNode(PortType::Out)->nodeDataModel()->updatePorts();
 
   return connection;
 }
@@ -187,10 +196,23 @@ void
 FlowScene::
 deleteConnection(Connection& connection)
 {
+  Node* nodes[3];
+  nodes[0] = connection._inNode;
+  nodes[1] = connection._outNode;
+  nodes[2] = connection._savedNode;
+
   auto it = _connections.find(connection.id());
   if (it != _connections.end()) {
     connection.removeFromNodes();
     _connections.erase(it);
+  }
+
+  for (int i = 0; i < 3; ++i)
+  {
+      if (nodes[i] != nullptr)
+      {
+          nodes[i]->nodeDataModel()->updatePorts();
+      }
   }
 }
 
@@ -206,6 +228,9 @@ createNode(std::unique_ptr<NodeDataModel> && dataModel)
 
   auto nodePtr = node.get();
   _nodes[node->id()] = std::move(node);
+
+  QObject::connect(nodePtr, &Node::portAdded, this, &FlowScene::onPortAdded);
+  QObject::connect(nodePtr, &Node::portRemoved, this, &FlowScene::onPortRemoved);
 
   nodeCreated(*nodePtr);
   return *nodePtr;
@@ -649,4 +674,122 @@ locateNodeAt(QPointF scenePoint, FlowScene &scene,
 
   return resultNode;
 }
+
+void FlowScene::onPortAdded(QUuid nodeUuid, PortType portType, PortIndex portIndex)
+{
+    auto iter = _nodes.find(nodeUuid);
+    Q_ASSERT(iter != _nodes.end());
+
+    Node* node = iter->second.get();
+    NodeDataModel* nodeDataModel = node->nodeDataModel();
+    NodeGeometry& nodeGeometry = node->nodeGeometry();
+
+    std::vector<NodeState::ConnectionPtrSet>* connections = nullptr;
+    unsigned int newSize = 0;
+    if (portType == PortType::In)
+    {
+        newSize = nodeDataModel->nPorts(PortType::In);
+        nodeGeometry._nSources = newSize;
+        connections = &node->_nodeState._inConnections;
+    }
+    else
+    {
+        newSize = nodeDataModel->nPorts(PortType::Out);
+        nodeGeometry._nSinks = newSize;
+        connections = &node->_nodeState._outConnections;
+    }
+
+    Q_ASSERT(connections != nullptr);
+    Q_ASSERT(connections->empty() == false);
+
+    connections->resize(newSize);
+    for (size_t i = connections->size() - 1; i > static_cast<size_t>(portIndex); ++i)
+    {
+        NodeState::ConnectionPtrSet moved_connections = connections->operator[](i - 1);
+        for (auto& connection_node : moved_connections)
+        {
+            Connection* connection = connection_node.second;
+            if (portType == PortType::In)
+            {
+                Q_ASSERT(connection->_inNode == node);
+                Q_ASSERT(connection->_inPortIndex == i - 1);
+                connection->_inPortIndex = i;
+            }
+            else
+            {
+                Q_ASSERT(connection->_outNode == node);
+                Q_ASSERT(connection->_outPortIndex == i - 1);
+                connection->_outPortIndex = i;
+            }
+        }
+        connections->operator[](i) = std::move(connections->operator[](i - 1));
+    }
+
+    node->recalculateVisuals();
+}
+
+void FlowScene::onPortRemoved(QUuid nodeUuid, PortType portType, PortIndex portIndex)
+{
+    auto iter = _nodes.find(nodeUuid);
+    Q_ASSERT(iter != _nodes.end());
+
+    Node* node = iter->second.get();
+    NodeDataModel* nodeDataModel = node->nodeDataModel();
+    NodeGeometry& nodeGeometry = node->nodeGeometry();
+
+    std::vector<NodeState::ConnectionPtrSet>* connections = nullptr;
+
+    if (portType == PortType::In)
+    {
+        connections = &node->_nodeState._inConnections;
+    }
+    else
+    {
+        connections = &node->_nodeState._outConnections;
+    }
+
+    std::vector<Connection*> connections_to_remove;
+    connections_to_remove.reserve(connections->operator[](portIndex).size());
+    for (const auto& connection_node : connections->operator[](portIndex))
+    {
+        connections_to_remove.push_back(connection_node.second);
+    }
+
+    for (Connection* connection: connections_to_remove)
+    {
+        deleteConnection(*connection);
+    }
+
+    if (portType == PortType::In)
+    {
+        nodeGeometry._nSources = nodeDataModel->nPorts(PortType::In);
+    }
+    else
+    {
+        nodeGeometry._nSinks = nodeDataModel->nPorts(PortType::Out);
+    }
+
+    Q_ASSERT(connections->operator[](portIndex).empty() == true);
+    for (size_t i = portIndex; i < connections->size() - 1; ++i)
+    {
+        connections->operator[](i) = std::move(connections->operator[](i + 1));
+        NodeState::ConnectionPtrSet connections_set = connections->operator[](i);
+        for (auto& connection_node : connections_set)
+        {
+            if (portType == PortType::In)
+            {
+                connection_node.second->_inPortIndex = i;
+            }
+            else
+            {
+                connection_node.second->_outPortIndex = i;
+            }
+        }
+    }
+
+    connections->pop_back();
+
+    node->recalculateVisuals();
+}
+
 }

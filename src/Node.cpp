@@ -39,6 +39,11 @@ Node(std::unique_ptr<NodeDataModel> && dataModel)
 
   connect(_nodeDataModel.get(), &NodeDataModel::embeddedWidgetSizeUpdated,
           this, &Node::onNodeSizeUpdated );
+
+  connect(_nodeDataModel.get(), &NodeDataModel::portAdded,
+      this, [this](PortType portType, PortIndex portIndex) { portAdded(id(), portType, portIndex); });
+  connect(_nodeDataModel.get(), &NodeDataModel::portRemoved,
+      this, [this](PortType portType, PortIndex portIndex) { portRemoved(id(), portType, portIndex); });
 }
 
 
@@ -207,12 +212,8 @@ propagateData(PortIndex inPortIndex) const
   }
 
   _nodeDataModel->setInData(std::move(nodeData), inPortIndex);
-
-  //Recalculate the nodes visuals. A data change can result in the node taking more space than before, so this forces a recalculate+repaint on the affected node
-  _nodeGraphicsObject->setGeometryChanged();
-  _nodeGeometry.recalculateSize();
-  _nodeGraphicsObject->update();
-  _nodeGraphicsObject->moveConnections();
+  _nodeDataModel->updatePorts();
+  recalculateVisuals();
 }
 
 
@@ -247,4 +248,14 @@ onNodeSizeUpdated()
             }
         }
     }
+}
+
+void
+Node::
+recalculateVisuals() const
+{
+    _nodeGraphicsObject->setGeometryChanged();
+    _nodeGeometry.recalculateSize();
+    _nodeGraphicsObject->update();
+    _nodeGraphicsObject->moveConnections();
 }

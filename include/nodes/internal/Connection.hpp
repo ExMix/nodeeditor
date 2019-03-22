@@ -145,9 +145,11 @@ private:
   QUuid _uid;
 
 private:
+  friend class FlowScene;
 
   Node* _outNode = nullptr;
   Node* _inNode  = nullptr;
+  Node* _savedNode = nullptr;
 
   PortIndex _outPortIndex;
   PortIndex _inPortIndex;

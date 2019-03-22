@@ -150,6 +150,8 @@ private Q_SLOTS:
   void sendConnectionCreatedToNodes(Connection const& c);
   void sendConnectionDeletedToNodes(Connection const& c);
 
+  void onPortAdded(QUuid nodeUuid, PortType portType, PortIndex portIndex);
+  void onPortRemoved(QUuid nodeUuid, PortType portType, PortIndex portIndex);
 };
 
 Node*

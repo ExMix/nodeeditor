@@ -363,6 +363,7 @@ clearNode(PortType portType)
     connectionMadeIncomplete(*this);
   }
 
+  _savedNode = getNode(portType);
   getNode(portType) = nullptr;
 
   if (portType == PortType::In)

@@ -100,6 +100,18 @@ public Q_SLOTS: // data propagation
   void
   onNodeSizeUpdated();
 
+Q_SIGNALS:
+  void portAdded(QUuid nodeUuid, PortType portType, PortIndex portIndex);
+  void portRemoved(QUuid nodeUuid, PortType portType, PortIndex portIndex);
+
+protected:
+    friend class FlowScene;
+
+    /// Recalculates the nodes images.
+    /// A data change can result in the node taking more space than before,
+    /// so this forces a recalculate + repaint on the affected node.
+    void recalculateVisuals() const;
+
 private:
 
   // addressing

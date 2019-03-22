@@ -66,6 +66,8 @@ public:
 
 public:
 
+  virtual void updatePorts() {}
+
   virtual
   unsigned int nPorts(PortType portType) const = 0;
 
@@ -173,6 +175,9 @@ Q_SIGNALS:
   computingFinished();
 
   void embeddedWidgetSizeUpdated();
+
+  void portAdded(PortType portType, PortIndex portIndex);
+  void portRemoved(PortType portType, PortIndex portIndex);
 
 private:
 

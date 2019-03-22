@@ -129,6 +129,7 @@ private:
   portWidth(PortType portType) const;
 
 private:
+    friend class FlowScene;
 
   // some variables are mutable because
   // we need to change drawing metrics
@@ -154,5 +155,7 @@ private:
 
   mutable QFontMetrics _fontMetrics;
   mutable QFontMetrics _boldFontMetrics;
+
+  friend class Node;
 };
 }
