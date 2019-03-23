@@ -134,9 +134,14 @@ createConnection(Node& nodeIn,
 
   _connections[connection->id()] = connection;
 
-  connectionCreated(*connection);
-  connection->getNode(PortType::In)->nodeDataModel()->updatePorts();
-  connection->getNode(PortType::Out)->nodeDataModel()->updatePorts();
+  connect(connection.get(), &Connection::connectionCompleted, this, [this](Connection const& c) {
+      connectionCreated(c);
+      c.getNode(PortType::In)->nodeDataModel()->updatePorts();
+      c.getNode(PortType::Out)->nodeDataModel()->updatePorts();
+  });
+
+
+  connection->connectionCompleted(*connection);
 
   return connection;
 }
