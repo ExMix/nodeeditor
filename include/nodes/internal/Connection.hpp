@@ -153,6 +153,7 @@ private:
 
   PortIndex _outPortIndex;
   PortIndex _inPortIndex;
+  PortIndex _savedIndex = INVALID;
 
 private:
 

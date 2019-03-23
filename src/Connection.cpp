@@ -229,6 +229,11 @@ getPortIndex(PortType portType) const
       break;
   }
 
+  if (result == INVALID)
+  {
+      result = _savedIndex;
+  }
+
   return result;
 }
 
@@ -264,6 +269,8 @@ setNodeToPort(Node& node,
   updated(*this);
   if (complete() && wasIncomplete) {
     connectionCompleted(*this);
+    _savedNode = nullptr;
+    _savedIndex = INVALID;
   }
 }
 
@@ -372,9 +379,15 @@ clearNode(PortType portType)
   getNode(portType) = nullptr;
 
   if (portType == PortType::In)
+  {
+    _savedIndex = _inPortIndex;
     _inPortIndex = INVALID;
+  }
   else
+  {
+    _savedIndex = _outPortIndex;
     _outPortIndex = INVALID;
+  }
 }
 
 
