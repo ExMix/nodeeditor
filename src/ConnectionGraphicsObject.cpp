@@ -216,6 +216,7 @@ mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 
   if (_connection.connectionState().requiresPort())
   {
+      _connection.connectionMadeIncomplete(_connection);
     _scene.deleteConnection(_connection);
   }
 }

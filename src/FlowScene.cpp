@@ -625,8 +625,8 @@ void
 FlowScene::
 sendConnectionDeletedToNodes(Connection const& c)
 {
-  Node* from = c.getNode(PortType::Out);
-  Node* to   = c.getNode(PortType::In);
+  Node* from = c._outNode != nullptr ? c._outNode : c._savedNode;
+  Node* to   = c._inNode != nullptr ? c._inNode : c._savedNode;
 
   Q_ASSERT(from != nullptr);
   Q_ASSERT(to != nullptr);
