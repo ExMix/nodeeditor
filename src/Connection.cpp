@@ -246,10 +246,6 @@ setNodeToPort(Node& node,
 {
   bool wasIncomplete = !complete();
 
-  auto& nodeWeak = getNode(portType);
-
-  nodeWeak = &node;
-
   if (&node == _savedNode)
   {
       wasIncomplete = false;
@@ -258,6 +254,10 @@ setNodeToPort(Node& node,
   {
       connectionMadeIncomplete(*this);
   }
+
+  auto& nodeWeak = getNode(portType);
+
+  nodeWeak = &node;
 
   if (portType == PortType::Out)
     _outPortIndex = portIndex;
