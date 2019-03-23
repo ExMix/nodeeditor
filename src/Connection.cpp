@@ -327,11 +327,11 @@ getNode(PortType portType) const
   switch (portType)
   {
     case PortType::In:
-      return _inNode;
+      return _inNode != nullptr ? _inNode : _savedNode;
       break;
 
     case PortType::Out:
-      return _outNode;
+      return _outNode != nullptr ? _outNode : _savedNode;
       break;
 
     default:
@@ -349,11 +349,11 @@ getNode(PortType portType)
   switch (portType)
   {
     case PortType::In:
-      return _inNode != nullptr ? _inNode : _savedNode;
+      return _inNode;
       break;
 
     case PortType::Out:
-      return _outNode != nullptr ? _outNode : _savedNode;
+      return _outNode;
       break;
 
     default:
